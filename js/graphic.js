@@ -26,7 +26,7 @@ var nodes = [], lastNodeId = -1, links = [], layers = [];
 //==========================
 // set up SVG for D3
 //==========================
-var width  = 960,
+var width  = 700,
     height = 500,
     colors = d3.scale.category10();
 
