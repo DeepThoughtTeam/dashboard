@@ -16,22 +16,17 @@
 //     {source: nodes[1], target: nodes[2], left: false, right: true }
 //   ];
 
-var nodes = [], lastNodeId = -1, links = [];
 
-var tooltip  = d3.select('body').append('div')
-    .attr('class', 'tooltip')
-    .style('position', 'absolute')
-    .style('padding','0 10px')
-    .style('background','white')
-    .style('opacity', 0);
 
 
 
 var nodes = [], lastNodeId = -1, links = [], layers = [];
+
+
 //==========================
 // set up SVG for D3
 //==========================
-var width  = 700,
+var width  = 960,
     height = 500,
     colors = d3.scale.category10();
 
@@ -100,14 +95,14 @@ function flatLayer(layer){
   }
   ids = layer[0].id;
   for (var i = 1; i < layer.length; i++){
-    ids += ", " + layer[i].id;      
+    ids += ", " + layer[i].id;
   }
   return ids;
 }
 function displayLayers(layers){
   str = "";
   for (var i = 0; i < layers.length; i++){
-    str += "<p>"+flatLayer(layers[i])+"<button onclick = 'setStart("+i+");'>Start</button><button onclick = 'setEnd("+i+");' >End</button><button onclick = 'deleteLayer("+i+");' >Delete</button></p>" 
+    str += "<p>"+flatLayer(layers[i])+"<button onclick = 'setStart("+i+");'>Start</button><button onclick = 'setEnd("+i+");' >End</button><button onclick = 'deleteLayer("+i+");' >Delete</button></p>"
   }
   return str;
 }
@@ -131,7 +126,7 @@ function setStart(index){
 }
 function setEnd(index){
   endLayer = layers[index];
-  FullyConnect(startLayer, endLayer); 
+  //FullyConnect(startLayer, endLayer);
 }
 
 
@@ -140,12 +135,12 @@ function setEnd(index){
 //==========================
 var force = d3.layout.force()
     .nodes(nodes)
-    .links(links)
+    .links([])
     .size([width, height])
-    .linkDistance(function(d){
-		 var deltaX = d.target.x - d.source.x,
-        	deltaY = d.target.y - d.source.y;
-        return Math.sqrt(deltaX * deltaX + deltaY * deltaY);})
+    // .linkDistance(function(d){
+		//  var deltaX = d.target.x - d.source.x,
+    //     	deltaY = d.target.y - d.source.y;
+    //     return Math.sqrt(deltaX * deltaX + deltaY * deltaY);})
 	  .gravity(0)
     .charge(0)
     .on('tick', tick)  // 'tick': how's updating every step
@@ -279,8 +274,17 @@ function restart() {
     //  if(!mousedown_node || d === mousedown_node) return;
       // enlarge target node
    //    d3.select(this).attr('transform', 'scale(1.1)');
+      if(!d3.event.altKey) return;
 
-      tooltip.transition().style('opacity', .9);
+      var tooltip  = d3.select('body').append('div')
+          .attr('class', 'tooltip')
+          .style('position', 'absolute')
+          .style('padding','0 10px')
+          .style('background','white')
+          .style('opacity', 9);
+
+
+      //tooltip.transition().style('opacity', .9);
 
       var content = "id: " + d.id + "\n" + "px: " + d.x + "\n" + "py: " + d.y;
 
@@ -293,8 +297,8 @@ function restart() {
       // unenlarge target node
     //  d3.select(this).attr('transform', '');
 
-      tooltip.transition().style('opacity', 0);
-
+    //  tooltip.transition().style('opacity', 0);
+        d3.select('div.tooltip').remove();
     })
     .on('mousedown', function(d) {
       if(d3.event.ctrlKey) return;
@@ -471,6 +475,11 @@ function keydown() {
     svg.classed('ctrl', true);
   }
 
+  //alert
+  if(d3.event.keyCode === 18){
+    svg.classed('alt', true);
+  }
+
   if (d3.event.shiftKey){
     svg.classed('shift', true);
     d3.select('svg').select('.background').style('cursor', 'crosshair');
@@ -530,6 +539,12 @@ function keyup() {
       .on('touchstart.drag', null);
     svg.classed('ctrl', false);
   }
+  //alt
+  if(d3.event.keyCode === 18) {
+
+    svg.classed('alt', false);
+  }
+
   // shift
   else if (d3.event.keyCode === 16){
     svg.classed('shift', false);
@@ -543,16 +558,14 @@ function keyup() {
     .on("mousedown.brush", null);
 }
 
-function FullyConnect(){
-  
-}
+
 function generateLayers(){
   content = document.getElementById('layers').value;
   if ( content.length < 2 || (!(content.startsWith('[') && content.endsWith(']')))){
     alert("invalid input!");
     return;
   }
-  content = content.substring(1, content.length-1); 
+  content = content.substring(1, content.length-1);
   layers = content.split(',')
   for (i = 0; i < layers.length; i++){
     cur_layer = [];
@@ -560,7 +573,7 @@ function generateLayers(){
     for (j = 0; j < len; j++){
       node = {id: 0, reflexive: false};
       nodes.push(node);
-      cur_layer.push(node); 
+      cur_layer.push(node);
     }
     layers.push(cur_layer.slice());
     if (i > 0){
@@ -578,3 +591,70 @@ d3.select(window)
   .on('keydown', keydown)
   .on('keyup', keyup);
 restart();
+
+
+
+//var layers_links = [];
+
+function createLinks(layer_source, layer_target){
+
+   for(var i = 0; i < layer_source.length; i++){
+
+        var s = layer_source[i];
+
+        for(var j = 0; j<layer_target.length; j++){
+
+            var t = layer_target[j];
+            links.push({
+              source : s,
+              target : t,
+              left : false,
+              right : true
+            });
+        }
+   }
+}
+
+
+var connect = 0;
+
+function FullyConnect() {
+
+  createLinks(startLayer,endLayer);
+  restart();
+
+
+//  var connection = svg.append('svg:g').selectAll('path'),
+//  connection = connection.data(layers_links);
+
+  if(connect === 1){
+      connect = 0;
+      path.attr('d', '');
+      return;
+  }
+
+  // connection.enter().append('svg:path')
+  //   .attr('class', 'link')
+  //   .style('marker-start', function(d) { return d.left ? 'url(#start-arrow)' : ''; })
+  //   .style('marker-end', function(d) { return d.right ? 'url(#end-arrow)' : ''; })
+
+
+  path.attr('d', function(d) {
+    var deltaX = d.target.x - d.source.x,
+        deltaY = d.target.y - d.source.y,
+        dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
+        normX = deltaX / dist,
+        normY = deltaY / dist,
+        sourcePadding = d.left ? 17 : 12,
+        targetPadding = d.right ? 17 : 12,
+        sourceX = d.source.x + (sourcePadding * normX),
+        sourceY = d.source.y + (sourcePadding * normY),
+        targetX = d.target.x - (targetPadding * normX),
+        targetY = d.target.y - (targetPadding * normY);
+    return 'M' + sourceX + ',' + sourceY + 'L' + targetX + ',' + targetY;
+  });
+
+
+  connect = 1;
+
+}
