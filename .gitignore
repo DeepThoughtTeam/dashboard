@@ -6,3 +6,9 @@
 *.xml
 
 *.xml
+
+.DS_Store
+
+js/.DS_Store
+
+pages/.DS_Store
