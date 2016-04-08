@@ -105,7 +105,13 @@ function displayLayers(layers){
 }
 
 function groupNodes(layer){
-  layers.push(layer.slice());
+  var newLayer = layer.slice();
+  var layer_index = layers.length;
+  for (var i = 0; i < newLayer.length; i++){
+    newLayer[i]['node_index']= i;
+    newLayer[i]['layer_index']= layer_index;
+  }
+  layers.push(newLayer);
   document.getElementById('view_select').innerHTML = '';
   d3.selectAll('circle').style('stroke', function(d) {
             return d3.rgb(colors(d.id)).darker().toString();})
@@ -113,20 +119,84 @@ function groupNodes(layer){
   //document.getElementById('view_layers').innerHTML = JSON.stringify(layers, null, 1);
 }
 
-startLayer = [], endLayer = [];
+var startLayer = [], endLayer = [];
+var start_index = 0;
+var layer_pairs = {};
 function deleteLayer(index){
   layers.splice(index, 1);
+  for (var i = index+1; i < layers.length; i++){
+    for (var j = 0; j < layers[i].length; j++){
+        layers[i][j]['layer_index']--;
+    }
+  }
   document.getElementById('view_layers').innerHTML = displayLayers(layers);
 }
 function setStart(index){
+  if (index in layer_pairs){
+    alert("Invalid start layer! ");
+    return;
+  }
   startLayer = layers[index];
+  start_index = index;
 }
 function setEnd(index){
+  for (var start in layer_pairs){
+    if (layer_pairs[start] == index){
+        alert("Invalid end layer! ");
+        return;
+    }
+  }
   endLayer = layers[index];
   FullyConnect(startLayer, endLayer);
+  layer_pairs[start_index] = index;
+}
+var sequence = [];
+function isValidNetwork(){
+    if (layer_pairs.length == 0){
+        return false;
+    }
+    var keys = [];
+    for (var start in layer_pairs){
+        keys.push(start);
+    }
+    start_layers = [];
+    for (var i = 0; i < keys.length; i++){
+        var start = keys[i];
+        has_in = false;
+        for (var key in layer_pairs){
+            if (layer_pairs[key] == start){
+                has_in = true;
+                break;
+            }
+        }
+        if (!has_in){
+            start_layers.push(start);
+        }
+    }
+    if (start_layers.length != 1){
+        return false;
+    }
+    var first = start_layers[0], cur_start = first;
+    sequence.push(first);
+    while (cur_start in layer_pairs){
+        cur_start = layer_pairs[cur_start];
+        sequence.push(cur_start);
+    }
+    if (sequence.length != layers.length){
+        return false;
+    }else{
+        return true;
+    }
 }
 
-
+function reindex(sequence, layers){
+    for (var index = 0; index < sequence.length; index++){
+        cur_index = sequence[index];
+        for (var j = 0; j < layers[cur_index].length; j++){
+            layers[cur_index][j]['layer_index'] = index;
+        }
+    }
+}
 //==========================
 // init D3 force layout
 //==========================
@@ -681,8 +751,22 @@ function FullyConnect(layerfrom, layerto) {
   connect = 1;
 
 }
+function validateNetwork(){
+    if (isValidNetwork()){
+        alert("Validate!");
 
+    }else{
+        alert("Invalidate!");
+    }
+    sequence =[];
+}
 function saveModel(){
+    if (!isValidNetwork()){
+        alert("Invalid network! ");
+        return;
+    }else{
+        reindex(sequence, layers);
+    }
     json_str = "{\"nodes\":" + JSON.stringify(nodes) + ", \"linkes\":"+JSON.stringify(links)+"}";
     obj = JSON.parse(json_str);
     document.getElementById("view_json").innerHTML = JSON.stringify(obj);
