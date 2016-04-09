@@ -100,7 +100,7 @@ function flatLayer(layer){
 function displayLayers(layers){
   str = "";
   for (var i = 0; i < layers.length; i++){
-    str += "<p>"+flatLayer(layers[i])+"<button onclick = 'setStart("+i+");'>Start</button><button onclick = 'setEnd("+i+");' >End</button><button onclick = 'deleteLayer("+i+");' >Delete</button></p>"
+    str += "<p>"+flatLayer(layers[i])+"<button type = 'button' onclick = 'setStart("+i+");'>Start</button><button type = 'button' onclick = 'setEnd("+i+");' >End</button><button onclick = 'deleteLayer("+i+");' >Delete</button></p>"
   }
   return str;
 }
@@ -308,7 +308,6 @@ function restart() {
     .classed('selected', function(d) { return d === selected_link; })
     .style('marker-start', function(d) { return d.left ? 'url(#start-arrow)' : ''; })
     .style('marker-end', function(d) { return d.right ? 'url(#end-arrow)' : ''; })
-    .style('opacity', function(d){return d.opacity == 1 ? 1 : 0.5; })
     .on('mousedown', function(d) {
       if(d3.event.ctrlKey || d3.event.shiftKey) return;
       // select link
@@ -342,7 +341,7 @@ function restart() {
       return (d.selected)? 'red': d3.rgb(colors(d.id)).darker().toString();
     })
     .classed('reflexive', function(d) { return d.reflexive; })
-    .on('click', function(d) {
+    .on('mouseover', function(d) {
     //  if(!mousedown_node || d === mousedown_node) return;
       // enlarge target node
    //    d3.select(this).attr('transform', 'scale(1.1)');
@@ -355,40 +354,22 @@ function restart() {
           .style('background','white')
           .style('opacity', 9);
 
-      d3.selectAll('circle').style('opacity', .5);
-      d3.select(this).style('opacity', 1);
 
-      for(var i = 0; i< links.length; i++){
-          if(links[i].target.id != d.id){
-              links[i].opacity = 0;
-          }
-      }
+      //tooltip.transition().style('opacity', .9);
 
-      path = path.data(links);
-      path.style('opacity', function(l){return l.opacity == 1 ? 1 : 0.5; });
       var content = "id: " + d.id + "\n" + "px: " + d.x + "\n" + "py: " + d.y;
 
       tooltip.html(content)
              .style('left', (d3.event.pageX) + 'px')
              .style('top', (d3.event.pageY) + 'px');
-
     })
     .on('mouseout', function(d) {
     //  if(!mousedown_node || d === mousedown_node) return;
       // unenlarge target node
     //  d3.select(this).attr('transform', '');
-        d3.selectAll('circle').style('opacity', 1);
 
     //  tooltip.transition().style('opacity', 0);
         d3.select('div.tooltip').remove();
-
-        for(var i = 0; i< links.length; i++){
-          links[i].opacity = 1;
-        }
-
-        path = path.data(links);
-        path.style('opacity', function(l){return l.opacity == 1 ? 1 : 0.5; });
-
     })
     .on('mousedown', function(d) {
       if(d3.event.ctrlKey) return;
@@ -451,7 +432,7 @@ function restart() {
       if(link) {
         link[direction] = true;
       } else {
-        link = {source: source, target: target, left: false, right: false, opacity : 1};
+        link = {source: source, target: target, left: false, right: false};
         link[direction] = true;
         links.push(link);
       }
@@ -494,8 +475,6 @@ function mousedown() {
 
   node.x = point[0];
   node.y = point[1];
-  node.layer = -1;
-  node.sequenceid = -1;
 
   // avoid overlap nodes
   for(var i = 0; i< nodes.length; i++){
@@ -727,8 +706,7 @@ function createLinks(layer_source, layer_target){
               source : s,
               target : t,
               left : false,
-              right : true,
-              opacity : 1
+              right : true
             });
         }
    }
