@@ -19,6 +19,7 @@
 
 
 var nodes = [], lastNodeId = -1, links = [], layers = [];
+var params = [];
 var currentObject = null;
 //==========================
 // set up SVG for D3
@@ -150,6 +151,7 @@ function setEnd(index){
   FullyConnect(startLayer, endLayer);
   layer_pairs[start_index] = index;
 }
+
 var sequence = [];
 function isValidNetwork(){
     if (layer_pairs.length == 0){
@@ -182,11 +184,12 @@ function isValidNetwork(){
         cur_start = layer_pairs[cur_start];
         sequence.push(cur_start);
     }
-    if (sequence.length != layers.length){
-        return false;
-    }else{
-        return true;
-    }
+    return sequence.length == layers.length;
+//    if (sequence.length != layers.length){
+//        return false;
+//    }else{
+//        return true;
+//    }
 }
 
 function reindex(sequence, layers){
@@ -195,6 +198,7 @@ function reindex(sequence, layers){
         for (var j = 0; j < layers[cur_index].length; j++){
             layers[cur_index][j]['layer_index'] = index;
         }
+        params.push(layers[cur_index].length);
     }
 }
 //==========================
@@ -652,42 +656,37 @@ function generateLayers(){
     len = parseInt(temp[i]);
     for (j = 0; j < len; j++){
       //node = {id: ++lastNodeId, reflexive: false};
-      node = {id: ++lastNodeId, reflexive: false, x:100+i*100, y:70+j*50};
+      node = {id: ++lastNodeId, reflexive: false, x:100+i*100, y:70+j*50, node_index: j, layer_index: i};
       nodes.push(node);
       cur_layer.push(node);
     }
     layers.push(cur_layer.slice());
     if (i > 0){
       FullyConnect(layers[i-1], layers[i]);
+      layer_pairs[i-1] = i;
     }
   }
 }
-
 
 function viz_network(temp){
   nodes = [];
   cur_layer = [];
   layers = [];
   lastNodeId = 0;
-//  content = document.getElementById('layers').value;
-//  if ( content.length < 2 || (!(content.startsWith('[') && content.endsWith(']')))){
-//    alert("invalid input!");
-//    return;
-//  }
-//  content = content.substring(1, content.length-1);
-//  temp = content.split(',')
+
   for (i = 0; i < temp.length; i++){
     cur_layer = [];
     len = parseInt(temp[i]);
     for (j = 0; j < len; j++){
       //node = {id: ++lastNodeId, reflexive: false};
-      node = {id: ++lastNodeId, reflexive: false, x:100+i*100, y:70+j*50};
+      node = {id: ++lastNodeId, reflexive: false, x:100+i*100, y:70+j*50, node_index: j, layer_index: i};
       nodes.push(node);
       cur_layer.push(node);
     }
     layers.push(cur_layer.slice());
     if (i > 0){
       FullyConnect(layers[i-1], layers[i]);
+      layer_pairs[i-1] = i;
     }
   }
 }
@@ -753,10 +752,10 @@ function FullyConnect(layerfrom, layerto) {
 }
 function validateNetwork(){
     if (isValidNetwork()){
-        alert("Validate!");
+        alert("Valid!");
 
     }else{
-        alert("Invalidate!");
+        alert("Invalid!");
     }
     sequence =[];
 }
@@ -767,12 +766,19 @@ function saveModel(){
     }else{
         reindex(sequence, layers);
     }
-    json_str = "{\"nodes\":" + JSON.stringify(nodes) + ", \"linkes\":"+JSON.stringify(links)+"}";
-    obj = JSON.parse(json_str);
-    document.getElementById("view_json").innerHTML = JSON.stringify(obj);
+//    json_str = "{\"nodes\":" + JSON.stringify(nodes) + ", \"linkes\":"+JSON.stringify(links)+"}";
+//    obj = JSON.parse(json_str);
+//    document.getElementById("view_json").innerHTML = JSON.stringify(obj);
+    document.getElementById("view_json").innerHTML = flatParams();
     // to do...
 }
-
+function flatParams(){
+    var str = ""
+    for (var i = 0; i < params.length; i++){
+        str += params[i] + ","
+    }
+    return str.substring(0, str.length - 1);
+}
 // app starts here
 svg.on('mousedown', mousedown)
   .on('mousemove', mousemove)
