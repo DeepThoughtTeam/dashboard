@@ -451,7 +451,7 @@ function restart() {
       if(link) {
         link[direction] = true;
       } else {
-        link = {source: source, target: target, left: false, right: false, opacity : 1};
+        link = {source: source, target: target, left: false, right: false, opacity:1};
         link[direction] = true;
         links.push(link);
       }
@@ -677,7 +677,7 @@ function generateLayers(){
     len = parseInt(temp[i]);
     for (j = 0; j < len; j++){
       //node = {id: ++lastNodeId, reflexive: false};
-      node = {id: ++lastNodeId, reflexive: false, x:100+i*100, y:70+j*50, node_index: j, layer_index: i};
+      node = {id: ++lastNodeId, reflexive: false, x:100+i*100, y:70+j*50, node_index: j, layer_index: i, opacity:1};
       nodes.push(node);
       cur_layer.push(node);
     }
@@ -700,7 +700,7 @@ function viz_network(temp){
     len = parseInt(temp[i]);
     for (j = 0; j < len; j++){
       //node = {id: ++lastNodeId, reflexive: false};
-      node = {id: ++lastNodeId, reflexive: false, x:100+i*100, y:70+j*50, node_index: j, layer_index: i};
+      node = {id: ++lastNodeId, reflexive: false, x:100+i*100, y:70+j*50, node_index: j, layer_index: i, opacity:1};
       nodes.push(node);
       cur_layer.push(node);
     }
@@ -728,7 +728,7 @@ function createLinks(layer_source, layer_target){
               target : t,
               left : false,
               right : true,
-              opacity : 1
+              opacity:1
             });
         }
    }
